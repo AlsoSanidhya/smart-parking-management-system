@@ -1,0 +1,9 @@
+{
+    "code-runner.runInTerminal": true,
+    "code-runner.saveFileBeforeRun": true,
+    "code-runner.ignoreSelection": true,
+    "code-runner.fileDirectoryAsCwd": true,
+    "code-runner.executorMap": {
+        "c": "$env:Path = 'C:\\msys64\\ucrt64\\bin;' + $env:Path; & 'C:\\msys64\\ucrt64\\bin\\gcc.exe' \"$fileName\" -o \"$fileNameWithoutExt.exe\" -lraylib -lopengl32 -lgdi32 -lwinmm; if ($LASTEXITCODE -eq 0) { & \".\\$fileNameWithoutExt.exe\" }"
+    }
+}
