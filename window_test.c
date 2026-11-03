@@ -9,7 +9,7 @@ int main(void)
     {
         BeginDrawing();
         ClearBackground(RAYWHITE);
-        DrawText("Smart Parking Management", 40, 40, 30, DARKBLUE);
+        DrawText("Smart Parking Management System", 40, 40, 30, DARKBLUE);
         EndDrawing();
     }
 
