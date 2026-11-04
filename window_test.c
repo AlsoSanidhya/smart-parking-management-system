@@ -30,7 +30,17 @@ int main(void)
                 }
             }
         }
-
+        if (IsKeyPressed(KEY_A))
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                if (occupied[i] == 0)
+                {
+                    occupied[i] = 1;
+                    break;
+                }
+            }
+        }
         BeginDrawing();
         ClearBackground(RAYWHITE);
         DrawText("Smart Parking Management System", 40, 40, 30, DARKBLUE); 
