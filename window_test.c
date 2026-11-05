@@ -6,6 +6,8 @@ int main(void)
     SetTargetFPS(60);
 
     int occupied[5] = {0}; // Array to track occupied parking spaces
+    int slotsChecked = 0; 
+    int lastAssigned = -1;
 
     while (!WindowShouldClose())
     {
@@ -32,11 +34,15 @@ int main(void)
         }
         if (IsKeyPressed(KEY_A))
         {
+            slotsChecked = 0;
+            lastAssigned = -1;
             for (int i = 0; i < 5; i++)
             {
+                slotsChecked++;
                 if (occupied[i] == 0)
                 {
                     occupied[i] = 1;
+                    lastAssigned = i;
                     break;
                 }
             }
@@ -69,6 +75,17 @@ int main(void)
         if (available == 0)
         {
             DrawText("Parking Full", 50, 360, 25, RED); // Display "Parking Full" message
+        }
+        DrawText(TextFormat("Slots checked on last search: %d", slotsChecked),
+         50, 400, 20, DARKGRAY);
+        if (lastAssigned >= 0)
+        {
+            DrawText(TextFormat("Last assignment: P%d", lastAssigned + 1),
+                     50, 435, 20, DARKGRAY);
+        }
+        else if (slotsChecked > 0)
+        {
+            DrawText("No free slot found", 50, 435, 20, RED);
         }
         EndDrawing();
     }
