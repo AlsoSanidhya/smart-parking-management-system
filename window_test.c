@@ -12,14 +12,6 @@ int main(void)
 
     while (!WindowShouldClose())
     {
-        if (IsKeyPressed(KEY_ONE))
-        {
-            occupied[0] = !occupied[0];
-        }
-        if (IsKeyPressed(KEY_TWO))
-        {
-            occupied[1] = !occupied[1];
-        }
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) // Check for mouse click to toggle parking space occupancy
         {
@@ -33,7 +25,7 @@ int main(void)
                 }
             }
         }
-        if (IsKeyPressed(KEY_A))
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), parkButton))
         {
             slotsChecked = 0;
             lastAssigned = -1;
@@ -51,6 +43,9 @@ int main(void)
         BeginDrawing();
         ClearBackground(RAYWHITE);
         DrawText("Smart Parking Management System", 40, 40, 30, DARKBLUE); 
+        DrawText("Click a slot to change its status. Click Park Car to park.",
+         40, 85, 18, DARKGRAY);
+
 
         for (int i = 0; i < 5; i++) // Draw parking spaces
         {
