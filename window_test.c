@@ -8,6 +8,7 @@ int main(void)
     int occupied[5] = {0}; // Array to track occupied parking spaces
     int slotsChecked = 0; 
     int lastAssigned = -1;
+    Rectangle parkButton = {600, 320, 150, 45};
 
     while (!WindowShouldClose())
     {
@@ -87,6 +88,8 @@ int main(void)
         {
             DrawText("No free slot found", 50, 435, 20, RED);
         }
+        DrawRectangleRec(parkButton, DARKBLUE);
+        DrawText("Park Car", 620, 332, 20, WHITE);
         EndDrawing();
     }
 
