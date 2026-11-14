@@ -1,4 +1,19 @@
 #include "raylib.h"
+#include <ctype.h>
+#include <string.h>
+
+int findVehicle(char parkedPlates[5][16], const char *plate)
+{
+    for (int i = 0; i < 5; i++)
+    {
+        if (strcmp(parkedPlates[i], plate) == 0)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
 
 int main(void)
 {
@@ -6,12 +21,35 @@ int main(void)
     SetTargetFPS(60);
 
     int occupied[5] = {0}; // Array to track occupied parking spaces
+    char parkedPlates[5][16] = {0};
     int slotsChecked = 0; 
     int lastAssigned = -1;
     Rectangle parkButton = {600, 320, 150, 45};
+    char vehicleNumber[16] = "";
+    int vehicleLength = 0;
+    int duplicatePlate = 0;
 
     while (!WindowShouldClose())
     {
+        int key = GetCharPressed();
+
+        if (key >= 32 && key <= 126 && vehicleLength < 10)
+        {
+            key = toupper(key);
+
+            if ((key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9'))
+            {
+                vehicleNumber[vehicleLength] = (char)key;
+                vehicleLength++;
+                vehicleNumber[vehicleLength] = '\0';
+            }
+        }
+
+        if (IsKeyPressed(KEY_BACKSPACE) && vehicleLength > 0)
+        {
+        vehicleLength--;
+        vehicleNumber[vehicleLength] = '\0';
+        }
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) // Check for mouse click to toggle parking space occupancy
         {
@@ -21,30 +59,36 @@ int main(void)
                 Rectangle slot = {50 + i * 120, 120, 90, 140};
                 if (CheckCollisionPointRec(mouse, slot))
                 {
-                    occupied[i] = !occupied[i];
+                    occupied[i] = 0;
+                    parkedPlates[i][0] = '\0';
                 }
             }
         }
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), parkButton))
+        if (vehicleLength > 0 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), parkButton))
         {
             slotsChecked = 0;
             lastAssigned = -1;
-            for (int i = 0; i < 5; i++)
+
+            duplicatePlate = findVehicle(parkedPlates, vehicleNumber) >= 0;
+
+            for (int i = 0; i < 5 && !duplicatePlate; i++)
             {
                 slotsChecked++;
                 if (occupied[i] == 0)
                 {
                     occupied[i] = 1;
+                    strcpy(parkedPlates[i], vehicleNumber);
+                    vehicleNumber[0] = '\0';
+                    vehicleLength = 0;
                     lastAssigned = i;
                     break;
-                }
+}
             }
         }
         BeginDrawing();
         ClearBackground(RAYWHITE);
         DrawText("Smart Parking Management System", 40, 40, 30, DARKBLUE); 
-        DrawText("Click a slot to change its status. Click Park Car to park.",
-         40, 85, 18, DARKGRAY);
+        DrawText("Type a plate and click Park Car. Click a parked car to check out.", 40, 85, 18, DARKGRAY);
 
 
         for (int i = 0; i < 5; i++) // Draw parking spaces
@@ -56,6 +100,7 @@ int main(void)
 
             DrawText(TextFormat("P%d", i + 1),
                      x + 30, 180, 30, BLACK);
+            DrawText(parkedPlates[i], x + 5, 225, 12, BLACK);         
         }
 
         int available = 0; // Count available parking spaces
@@ -74,17 +119,24 @@ int main(void)
         }
         DrawText(TextFormat("Slots checked on last search: %d", slotsChecked),
          50, 400, 20, DARKGRAY);
-        if (lastAssigned >= 0)
+        if (duplicatePlate)
+        {
+            DrawText("Vehicle already parked", 50, 435, 20, RED);
+        }
+        else if (lastAssigned >= 0)
         {
             DrawText(TextFormat("Last assignment: P%d", lastAssigned + 1),
-                     50, 435, 20, DARKGRAY);
+             50, 435, 20, DARKGRAY);
         }
         else if (slotsChecked > 0)
         {
             DrawText("No free slot found", 50, 435, 20, RED);
         }
+
         DrawRectangleRec(parkButton, DARKBLUE);
         DrawText("Park Car", 620, 332, 20, WHITE);
+        DrawText("Vehicle number:", 50, 280, 20, DARKBLUE);
+        DrawText(vehicleNumber, 240, 280, 20, BLACK);
         EndDrawing();
     }
 
