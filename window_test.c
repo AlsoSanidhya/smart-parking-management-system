@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "raylib.h"
 #include <ctype.h>
 #include <string.h>
@@ -29,8 +30,28 @@ int main(void)
     int vehicleLength = 0;
     int duplicatePlate = 0;
     Rectangle findButton = {600, 380, 150, 45};
+    Rectangle cheapestButton = {600, 440, 150, 45};
     int foundSlot = -2;
     int hourlyRate[5] = {40, 25, 30, 20, 35};
+
+    FILE *savedParking = fopen("parking.txt", "r");
+
+    if (savedParking != NULL)
+    {
+        int slot;
+        char plate[16];
+
+        while (fscanf(savedParking, "%d %15s", &slot, plate) == 2)
+        {
+            if (slot >= 0 && slot < 5)
+            {
+            strcpy(parkedPlates[slot], plate);
+            occupied[slot] = 1;
+            }
+        }
+
+        fclose(savedParking);
+    }
 
     while (!WindowShouldClose())
     {
@@ -67,27 +88,39 @@ int main(void)
                 }
             }
         }
-        if (vehicleLength > 0 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), parkButton))
+        int clicked = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+        int chooseCheapest = clicked && CheckCollisionPointRec(GetMousePosition(), cheapestButton);
+
+        if (vehicleLength > 0 && clicked && (chooseCheapest || CheckCollisionPointRec(GetMousePosition(), parkButton)))
         {
             slotsChecked = 0;
             lastAssigned = -1;
-
             duplicatePlate = findVehicle(parkedPlates, vehicleNumber) >= 0;
 
             for (int i = 0; i < 5 && !duplicatePlate; i++)
             {
                 slotsChecked++;
-                if (occupied[i] == 0)
+
+                if (occupied[i] == 0 && (lastAssigned == -1 || hourlyRate[i] < hourlyRate[lastAssigned]))
                 {
-                    occupied[i] = 1;
-                    strcpy(parkedPlates[i], vehicleNumber);
-                    vehicleNumber[0] = '\0';
-                    vehicleLength = 0;
                     lastAssigned = i;
-                    break;
+
+                    if (!chooseCheapest)
+                    {
+                        break;
+                    }
                 }
+        
             }
-        }
+
+    if (lastAssigned >= 0)
+    {
+        occupied[lastAssigned] = 1;
+        strcpy(parkedPlates[lastAssigned], vehicleNumber);
+        vehicleNumber[0] = '\0';
+        vehicleLength = 0;
+    }
+}
         if (vehicleLength > 0 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), findButton))
         {
             foundSlot = findVehicle(parkedPlates, vehicleNumber);
@@ -160,7 +193,30 @@ int main(void)
         {
             DrawText("Last lookup: Vehicle not found", 50, 465, 20, RED);
         }
+        DrawRectangleRec(cheapestButton, DARKBLUE);
+        DrawText("Park Cheapest", 611, 454, 17, WHITE);
         EndDrawing();
+    }
+    FILE *parkingOutput = fopen("parking.txt", "w");
+
+    if (parkingOutput != NULL)
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            if (occupied[i])
+            {
+                fprintf(parkingOutput, "%d %s\n", i, parkedPlates[i]);
+            }
+        }
+
+    if (fclose(parkingOutput) != 0)
+    {
+        puts("Could not finish saving parking.txt.");
+    }
+    }
+    else
+    {
+        puts("Could not open parking.txt for saving.");
     }
 
     CloseWindow();
