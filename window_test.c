@@ -28,6 +28,9 @@ int main(void)
     char vehicleNumber[16] = "";
     int vehicleLength = 0;
     int duplicatePlate = 0;
+    Rectangle findButton = {600, 380, 150, 45};
+    int foundSlot = -2;
+    int hourlyRate[5] = {40, 25, 30, 20, 35};
 
     while (!WindowShouldClose())
     {
@@ -82,9 +85,14 @@ int main(void)
                     vehicleLength = 0;
                     lastAssigned = i;
                     break;
-}
+                }
             }
         }
+        if (vehicleLength > 0 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), findButton))
+        {
+            foundSlot = findVehicle(parkedPlates, vehicleNumber);
+        }
+
         BeginDrawing();
         ClearBackground(RAYWHITE);
         DrawText("Smart Parking Management System", 40, 40, 30, DARKBLUE); 
@@ -100,7 +108,9 @@ int main(void)
 
             DrawText(TextFormat("P%d", i + 1),
                      x + 30, 180, 30, BLACK);
-            DrawText(parkedPlates[i], x + 5, 225, 12, BLACK);         
+            DrawText(parkedPlates[i], x + 5, 225, 12, BLACK);    
+            DrawText(TextFormat("Rs %d/hr", hourlyRate[i]),
+            x + 8, 145, 14, BLACK);     
         }
 
         int available = 0; // Count available parking spaces
@@ -137,6 +147,19 @@ int main(void)
         DrawText("Park Car", 620, 332, 20, WHITE);
         DrawText("Vehicle number:", 50, 280, 20, DARKBLUE);
         DrawText(vehicleNumber, 240, 280, 20, BLACK);
+
+        DrawRectangleRec(findButton, DARKBLUE);
+        DrawText("Find Car", 620, 392, 20, WHITE);
+
+        if (foundSlot >= 0)
+        {
+            DrawText(TextFormat("Last lookup: P%d", foundSlot + 1),
+             50, 465, 20, DARKBLUE);
+        }
+        else if (foundSlot == -1)
+        {
+            DrawText("Last lookup: Vehicle not found", 50, 465, 20, RED);
+        }
         EndDrawing();
     }
 
