@@ -16,21 +16,34 @@ int findVehicle(char parkedPlates[5][16], const char *plate)
     return -1;
 }
 
+
+void DrawLabel(Font font, const char *text,int x, int y, float size, Color color)
+{
+    DrawTextEx(font, text,(Vector2){x, y},size, 1.0f, color);
+}
+
 int main(void)
 {
-    InitWindow(800, 500, "Smart Parking - Window Test");
+    InitWindow(1000, 650, "Smart Parking Management");
     SetTargetFPS(60);
-
+    Font uiFont = LoadFontEx("C:/Windows/Fonts/segoeui.ttf",40,NULL,0);
+    if (uiFont.texture.id == 0)
+    {
+        printf("Could not load Segoe UI font.\n");
+        CloseWindow();
+        return 1;
+    }
+    
     int occupied[5] = {0}; // Array to track occupied parking spaces
     char parkedPlates[5][16] = {0};
     int slotsChecked = 0; 
     int lastAssigned = -1;
-    Rectangle parkButton = {600, 320, 150, 45};
     char vehicleNumber[16] = "";
     int vehicleLength = 0;
     int duplicatePlate = 0;
-    Rectangle findButton = {600, 380, 150, 45};
-    Rectangle cheapestButton = {600, 440, 150, 45};
+    Rectangle parkButton = {790, 300, 170, 50};
+    Rectangle findButton = {790, 370, 170, 50};
+    Rectangle cheapestButton = {790, 440, 170, 50};
     int foundSlot = -2;
     int hourlyRate[5] = {40, 25, 30, 20, 35};
 
@@ -80,8 +93,8 @@ int main(void)
             Vector2 mouse = GetMousePosition();
             for (int i = 0; i < 5; i++)
             {
-                Rectangle slot = {50 + i * 120, 120, 90, 140};
-                if (CheckCollisionPointRec(mouse, slot))
+                Rectangle slot = {50 + i * 135, 120, 100, 150};
+                if (CheckCollisionPointRec(mouse, slot) && occupied[i])
                 {
                     occupied[i] = 0;
                     parkedPlates[i][0] = '\0';
@@ -128,22 +141,19 @@ int main(void)
 
         BeginDrawing();
         ClearBackground(RAYWHITE);
-        DrawText("Smart Parking Management System", 40, 40, 30, DARKBLUE); 
-        DrawText("Type a plate and click Park Car. Click a parked car to check out.", 40, 85, 18, DARKGRAY);
+        DrawLabel(uiFont,"Smart Parking Management System",40, 40, 32, DARKBLUE); 
+        DrawLabel(uiFont,"Enter a vehicle number to book a slot. Click an occupied slot to release it.",40, 85, 18, DARKGRAY);
 
 
         for (int i = 0; i < 5; i++) // Draw parking spaces
         {
-            int x = 50 + i * 120;
+            int x = 50 + i * 135;
 
-            DrawRectangle(x, 120, 90, 140,
-                        occupied[i] ? RED : GREEN);
+            DrawRectangle(x, 120, 100, 150,occupied[i] ? RED : GREEN);
 
-            DrawText(TextFormat("P%d", i + 1),
-                     x + 30, 180, 30, BLACK);
-            DrawText(parkedPlates[i], x + 5, 225, 12, BLACK);    
-            DrawText(TextFormat("Rs %d/hr", hourlyRate[i]),
-            x + 8, 145, 14, BLACK);     
+            DrawLabel(uiFont, TextFormat("P%d", i + 1),x + 30, 180, 30, BLACK);
+            DrawLabel(uiFont, parkedPlates[i],x + 5, 225, 14, BLACK);
+            DrawLabel(uiFont, TextFormat("Rs %d/hr", hourlyRate[i]),x + 8, 145, 16, BLACK);     
         }
 
         int available = 0; // Count available parking spaces
@@ -154,47 +164,57 @@ int main(void)
                 available++;
             }
         }
-        DrawText(TextFormat("Available: %d / 5", available),
-                 50, 320, 25, DARKBLUE);  // Display available parking spaces
-        if (available == 0)
-        {
-            DrawText("Parking Full", 50, 360, 25, RED); // Display "Parking Full" message
-        }
-        DrawText(TextFormat("Slots checked on last search: %d", slotsChecked),
-         50, 400, 20, DARKGRAY);
-        if (duplicatePlate)
-        {
-            DrawText("Vehicle already parked", 50, 435, 20, RED);
-        }
-        else if (lastAssigned >= 0)
-        {
-            DrawText(TextFormat("Last assignment: P%d", lastAssigned + 1),
-             50, 435, 20, DARKGRAY);
-        }
-        else if (slotsChecked > 0)
-        {
-            DrawText("No free slot found", 50, 435, 20, RED);
-        }
+        DrawLabel(uiFont,
+          TextFormat("Available: %d / 5", available),
+          50, 340, 25, DARKBLUE);
+
+if (available == 0)
+{
+    DrawLabel(uiFont, "Parking Full",
+              50, 380, 23, RED);
+}
+
+DrawLabel(uiFont,
+          TextFormat("Slots checked: %d", slotsChecked),
+          50, 420, 20, DARKGRAY);
+
+if (duplicatePlate)
+{
+    DrawLabel(uiFont, "Vehicle already parked",
+              50, 460, 20, RED);
+}
+else if (lastAssigned >= 0)
+{
+    DrawLabel(uiFont,
+              TextFormat("Last assignment: P%d", lastAssigned + 1),
+              50, 460, 20, DARKGRAY);
+}
+else if (slotsChecked > 0)
+{
+    DrawLabel(uiFont, "No free slot found",
+              50, 460, 20, RED);
+}
 
         DrawRectangleRec(parkButton, DARKBLUE);
-        DrawText("Park Car", 620, 332, 20, WHITE);
-        DrawText("Vehicle number:", 50, 280, 20, DARKBLUE);
-        DrawText(vehicleNumber, 240, 280, 20, BLACK);
-
+        DrawLabel(uiFont, "Park Car", 825, 310, 22, WHITE);
+        DrawLabel(uiFont, "Vehicle Number:", 50, 290, 22, DARKBLUE);
+        DrawLabel(uiFont, vehicleNumber, 250, 290, 22, BLACK);
         DrawRectangleRec(findButton, DARKBLUE);
-        DrawText("Find Car", 620, 392, 20, WHITE);
+        DrawLabel(uiFont, "Find Car", 825, 380, 22, WHITE);
 
-        if (foundSlot >= 0)
-        {
-            DrawText(TextFormat("Last lookup: P%d", foundSlot + 1),
-             50, 465, 20, DARKBLUE);
-        }
-        else if (foundSlot == -1)
-        {
-            DrawText("Last lookup: Vehicle not found", 50, 465, 20, RED);
-        }
+       if (foundSlot >= 0)
+{
+    DrawLabel(uiFont,
+              TextFormat("Last lookup: P%d", foundSlot + 1),
+              50, 505, 20, DARKBLUE);
+}
+else if (foundSlot == -1)
+{
+    DrawLabel(uiFont, "Last lookup: Vehicle not found",
+              50, 505, 20, RED);
+}
         DrawRectangleRec(cheapestButton, DARKBLUE);
-        DrawText("Park Cheapest", 611, 454, 17, WHITE);
+        DrawLabel(uiFont, "Park Cheapest", 800, 450, 19, WHITE);
         EndDrawing();
     }
     FILE *parkingOutput = fopen("parking.txt", "w");
@@ -218,7 +238,7 @@ int main(void)
     {
         puts("Could not open parking.txt for saving.");
     }
-
+    UnloadFont(uiFont);
     CloseWindow();
     return 0;
 }
