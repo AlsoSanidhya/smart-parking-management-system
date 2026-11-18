@@ -22,6 +22,118 @@ void DrawLabel(Font font, const char *text,int x, int y, float size, Color color
     DrawTextEx(font, text,(Vector2){x, y},size, 1.0f, color);
 }
 
+void mergeSortSlots(int slots[], int temp[], const int rates[],
+                    int left, int right)
+{
+    if (left >= right)
+    {
+        return;
+    }
+
+    int middle = left + (right - left) / 2;
+
+    mergeSortSlots(slots, temp, rates, left, middle);
+    mergeSortSlots(slots, temp, rates, middle + 1, right);
+
+    int first = left;
+    int second = middle + 1;
+    int next = left;
+
+    while (first <= middle && second <= right)
+    {
+        if (rates[slots[first]] <= rates[slots[second]])
+        {
+            temp[next] = slots[first];
+            first++;
+        }
+        else
+        {
+            temp[next] = slots[second];
+            second++;
+        }
+        next++;
+    }
+
+    while (first <= middle)
+    {
+        temp[next] = slots[first];
+        first++;
+        next++;
+    }
+
+    while (second <= right)
+    {
+        temp[next] = slots[second];
+        second++;
+        next++;
+    }
+
+    for (int i = left; i <= right; i++)
+    {
+        slots[i] = temp[i];
+    }
+}
+
+#define NODES 7
+#define INF 1000000
+
+void calculateDistances(int distance[NODES])
+{
+    // Node order: Entrance, Junction, P1, P2, P3, P4, P5.
+    // A zero means there is no direct lane between those nodes.
+    int lanes[NODES][NODES] = {
+        { 0, 10,  0, 35,  0,  0,  0}, // Entrance
+        {10,  0, 20, 12, 35, 18, 30}, // Junction
+        { 0, 20,  0,  0,  0,  0,  0}, // P1
+        {35, 12,  0,  0,  0,  0,  0}, // P2
+        { 0, 35,  0,  0,  0,  0,  0}, // P3
+        { 0, 18,  0,  0,  0,  0,  0}, // P4
+        { 0, 30,  0,  0,  0,  0,  0}  // P5
+    };
+
+    int visited[NODES] = {0};
+
+    for (int i = 0; i < NODES; i++)
+    {
+        distance[i] = INF;
+    }
+    distance[0] = 0; // Distance from the entrance to itself.
+
+    for (int step = 0; step < NODES; step++)
+    {
+        int closest = -1;
+        int best = INF;
+
+        for (int i = 0; i < NODES; i++)
+        {
+            if (!visited[i] && distance[i] < best)
+            {
+                best = distance[i];
+                closest = i;
+            }
+        }
+
+        if (closest == -1)
+        {
+            break;
+        }
+
+        visited[closest] = 1;
+
+        for (int next = 0; next < NODES; next++)
+        {
+            if (!visited[next] && lanes[closest][next] > 0)
+            {
+                int newDistance = distance[closest] + lanes[closest][next];
+
+                if (newDistance < distance[next])
+                {
+                    distance[next] = newDistance;
+                }
+            }
+        }
+    }
+}
 int main(void)
 {
     InitWindow(1000, 650, "Smart Parking Management");
@@ -44,9 +156,10 @@ int main(void)
     Rectangle parkButton = {790, 300, 170, 50};
     Rectangle findButton = {790, 370, 170, 50};
     Rectangle cheapestButton = {790, 440, 170, 50};
+    Rectangle nearestButton = {790, 510, 170, 50};
     int foundSlot = -2;
     int hourlyRate[5] = {40, 25, 30, 20, 35};
-
+    int distance[NODES];calculateDistances(distance);
     FILE *savedParking = fopen("parking.txt", "r");
 
     if (savedParking != NULL)
@@ -174,36 +287,29 @@ int main(void)
             }
         }
 
-        DrawLabel(uiFont,
-          TextFormat("Available: %d / 5", available),
-          50, 340, 25, DARKBLUE);
+        int temp[5];mergeSortSlots(freeSlots, temp, hourlyRate, 0, available - 1);  
 
-if (available == 0)
-{
-    DrawLabel(uiFont, "Parking Full",
-              50, 380, 23, RED);
-}
+        DrawLabel(uiFont,TextFormat("Available: %d / 5", available),50, 340, 25, DARKBLUE);
 
-DrawLabel(uiFont,
-          TextFormat("Slots checked: %d", slotsChecked),
-          50, 420, 20, DARKGRAY);
+        if (available == 0)
+        {
+        DrawLabel(uiFont, "Parking Full",50, 380, 23, RED);
+        }
 
-if (duplicatePlate)
-{
-    DrawLabel(uiFont, "Vehicle already parked",
-              50, 460, 20, RED);
-}
-else if (lastAssigned >= 0)
-{
-    DrawLabel(uiFont,
-              TextFormat("Last assignment: P%d", lastAssigned + 1),
-              50, 460, 20, DARKGRAY);
-}
-else if (slotsChecked > 0)
-{
-    DrawLabel(uiFont, "No free slot found",
-              50, 460, 20, RED);
-}
+        DrawLabel(uiFont,TextFormat("Slots checked: %d", slotsChecked),50, 420, 20, DARKGRAY);
+
+        if (duplicatePlate)
+        {
+        DrawLabel(uiFont, "Vehicle already parked",50, 460, 20, RED);
+        }
+        else if (lastAssigned >= 0)
+        {
+            DrawLabel(uiFont,TextFormat("Last assignment: P%d (%d m)",lastAssigned + 1, distance[lastAssigned + 2]),50, 460, 20, DARKGRAY);
+        }
+        else if (slotsChecked > 0)
+        {
+            DrawLabel(uiFont, "No free slot found",50, 460, 20, RED);
+        }
 
         DrawRectangleRounded(parkButton, 0.20f, 8, DARKBLUE);
         DrawLabel(uiFont, "Park Car", 825, 310, 22, WHITE);
@@ -215,32 +321,31 @@ else if (slotsChecked > 0)
         DrawLabel(uiFont, "Find Car", 825, 380, 22, WHITE);
 
        if (foundSlot >= 0)
-{
-    DrawLabel(uiFont,
-              TextFormat("Last lookup: P%d", foundSlot + 1),
-              50, 505, 20, DARKBLUE);
-}
-else if (foundSlot == -1)
-{
-    DrawLabel(uiFont, "Last lookup: Vehicle not found",
-              50, 505, 20, RED);
-}
-        DrawRectangleRounded(cheapestButton, 0.20f, 8, DARKBLUE);
-        DrawLabel(uiFont, "Park Cheapest", 800, 450, 19, WHITE);
-        DrawLabel(uiFont, "Compare Prices - Free Slots", 50, 555, 22, DARKBLUE);
+        {
+            DrawLabel(uiFont,TextFormat("Last lookup: P%d", foundSlot + 1),50, 505, 20, DARKBLUE);
+        }
+        else if (foundSlot == -1)
+        {
+            DrawLabel(uiFont, "Last lookup: Vehicle not found",50, 505, 20, RED);
+        }
+            DrawRectangleRounded(cheapestButton, 0.20f, 8, DARKBLUE);
+            DrawLabel(uiFont, "Park Cheapest", 800, 450, 19, WHITE);
+            DrawRectangleRounded(nearestButton, 0.20f, 8, DARKBLUE);
+            DrawLabel(uiFont, "Park Nearest", 815, 520, 20, WHITE);
+            DrawLabel(uiFont, "Compare Prices - Free Slots", 50, 555, 22, DARKBLUE);
 
-    if (available == 0)
-    {
-        DrawLabel(uiFont, "No free slots to compare.", 50, 590, 18, DARKGRAY);
-    }
+        if (available == 0)
+        {
+            DrawLabel(uiFont, "No free slots to compare.", 50, 590, 18, DARKGRAY);
+        }
 
-    for (int i = 0; i < available; i++)
-    {
-        int slot = freeSlots[i];
+        for (int i = 0; i < available; i++)
+        {
+            int slot = freeSlots[i];
 
-        DrawLabel(uiFont,TextFormat("P%d: Rs %d/hr", slot + 1, hourlyRate[slot]),50 + i * 145, 590, 20, BLACK);
-    }
-        EndDrawing();
+            DrawLabel(uiFont,TextFormat("P%d: Rs %d/hr", slot + 1, hourlyRate[slot]),50 + i * 145, 590, 20, BLACK);
+        }   
+            EndDrawing();
     }
     FILE *parkingOutput = fopen("parking.txt", "w");
 
