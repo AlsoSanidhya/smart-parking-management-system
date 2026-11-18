@@ -149,21 +149,31 @@ int main(void)
         {
             int x = 50 + i * 135;
 
-            DrawRectangle(x, 120, 100, 150,occupied[i] ? RED : GREEN);
+            
+        Color freeColor = {190, 235, 205, 255};
+        Color occupiedColor = {245, 195, 195, 255};
+
+        DrawRectangleRounded((Rectangle){x, 120, 100, 150},0.12f,8,occupied[i] ? occupiedColor : freeColor);
+
 
             DrawLabel(uiFont, TextFormat("P%d", i + 1),x + 30, 180, 30, BLACK);
-            DrawLabel(uiFont, parkedPlates[i],x + 5, 225, 14, BLACK);
+            DrawLabel(uiFont, parkedPlates[i], x + 5, 225, 15, BLACK);
             DrawLabel(uiFont, TextFormat("Rs %d/hr", hourlyRate[i]),x + 8, 145, 16, BLACK);     
         }
 
-        int available = 0; // Count available parking spaces
+       
+        int available = 0;
+        int freeSlots[5];
+
         for (int i = 0; i < 5; i++)
         {
             if (occupied[i] == 0)
             {
+                freeSlots[available] = i;
                 available++;
             }
         }
+
         DrawLabel(uiFont,
           TextFormat("Available: %d / 5", available),
           50, 340, 25, DARKBLUE);
@@ -195,11 +205,13 @@ else if (slotsChecked > 0)
               50, 460, 20, RED);
 }
 
-        DrawRectangleRec(parkButton, DARKBLUE);
+        DrawRectangleRounded(parkButton, 0.20f, 8, DARKBLUE);
         DrawLabel(uiFont, "Park Car", 825, 310, 22, WHITE);
         DrawLabel(uiFont, "Vehicle Number:", 50, 290, 22, DARKBLUE);
-        DrawLabel(uiFont, vehicleNumber, 250, 290, 22, BLACK);
-        DrawRectangleRec(findButton, DARKBLUE);
+        Rectangle inputBox = {245, 282, 250, 40};
+        DrawRectangleRounded(inputBox, 0.15f, 8, LIGHTGRAY);
+        DrawLabel(uiFont, vehicleNumber, 260, 290, 22, BLACK);
+        DrawRectangleRounded(findButton, 0.20f, 8, DARKBLUE);
         DrawLabel(uiFont, "Find Car", 825, 380, 22, WHITE);
 
        if (foundSlot >= 0)
@@ -213,8 +225,21 @@ else if (foundSlot == -1)
     DrawLabel(uiFont, "Last lookup: Vehicle not found",
               50, 505, 20, RED);
 }
-        DrawRectangleRec(cheapestButton, DARKBLUE);
+        DrawRectangleRounded(cheapestButton, 0.20f, 8, DARKBLUE);
         DrawLabel(uiFont, "Park Cheapest", 800, 450, 19, WHITE);
+        DrawLabel(uiFont, "Compare Prices - Free Slots", 50, 555, 22, DARKBLUE);
+
+    if (available == 0)
+    {
+        DrawLabel(uiFont, "No free slots to compare.", 50, 590, 18, DARKGRAY);
+    }
+
+    for (int i = 0; i < available; i++)
+    {
+        int slot = freeSlots[i];
+
+        DrawLabel(uiFont,TextFormat("P%d: Rs %d/hr", slot + 1, hourlyRate[slot]),50 + i * 145, 590, 20, BLACK);
+    }
         EndDrawing();
     }
     FILE *parkingOutput = fopen("parking.txt", "w");
