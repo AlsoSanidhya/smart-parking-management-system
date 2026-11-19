@@ -216,8 +216,11 @@ int main(void)
         }
         int clicked = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
         int chooseCheapest = clicked && CheckCollisionPointRec(GetMousePosition(), cheapestButton);
+        int chooseNearest = clicked &&CheckCollisionPointRec(GetMousePosition(), nearestButton);
 
-        if (vehicleLength > 0 && clicked && (chooseCheapest || CheckCollisionPointRec(GetMousePosition(), parkButton)))
+        const int *priority = chooseNearest ? &distance[2] : hourlyRate;
+        
+        if (vehicleLength > 0 && clicked && (chooseCheapest || chooseNearest || CheckCollisionPointRec(GetMousePosition(), parkButton)))
         {
             slotsChecked = 0;
             lastAssigned = -1;
@@ -227,11 +230,11 @@ int main(void)
             {
                 slotsChecked++;
 
-                if (occupied[i] == 0 && (lastAssigned == -1 || hourlyRate[i] < hourlyRate[lastAssigned]))
+                if (occupied[i] == 0 &&(!chooseNearest || priority[i] != INF) &&(lastAssigned == -1 || priority[i] < priority[lastAssigned]))
                 {
                     lastAssigned = i;
 
-                    if (!chooseCheapest)
+                    if (!chooseCheapest && !chooseNearest)
                     {
                         break;
                     }
