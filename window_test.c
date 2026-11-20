@@ -82,6 +82,7 @@ void calculateDistances(int distance[NODES])
 {
     // Node order: Entrance, Junction, P1, P2, P3, P4, P5.
     // A zero means there is no direct lane between those nodes.
+    // Represent the entrance, junction and parking slots as a weighted lane network.
     int lanes[NODES][NODES] = {
         { 0, 10,  0, 35,  0,  0,  0}, // Entrance
         {10,  0, 20, 12, 35, 18, 30}, // Junction
@@ -99,7 +100,8 @@ void calculateDistances(int distance[NODES])
         distance[i] = INF;
     }
     distance[0] = 0; // Distance from the entrance to itself.
-
+    // Start all nodes as unvisited and set the entrance distance to zero.
+    
     for (int step = 0; step < NODES; step++)
     {
         int closest = -1;
