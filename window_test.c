@@ -1,8 +1,10 @@
+// These headers provide file handling, GUI, character and string functions.
 #include <stdio.h>
 #include "raylib.h"
 #include <ctype.h>
 #include <string.h>
 
+// Searches stored plates one by one and returns the slot index, or -1 if not found.
 int findVehicle(char parkedPlates[5][16], const char *plate)
 {
     for (int i = 0; i < 5; i++)
@@ -16,20 +18,19 @@ int findVehicle(char parkedPlates[5][16], const char *plate)
     return -1;
 }
 
-
+// Draws a text label using the selected font, position, size and colour.
 void DrawLabel(Font font, const char *text,int x, int y, float size, Color color)
 {
     DrawTextEx(font, text,(Vector2){x, y},size, 1.0f, color);
 }
 
-void mergeSortSlots(int slots[], int temp[], const int rates[],
-                    int left, int right)
+void mergeSortSlots(int slots[], int temp[], const int rates[],int left, int right)
 {
     if (left >= right)
     {
         return;
     }
-
+// Divide the current section into smaller halves until each has at most one slot.
     int middle = left + (right - left) / 2;
 
     mergeSortSlots(slots, temp, rates, left, middle);
@@ -38,7 +39,7 @@ void mergeSortSlots(int slots[], int temp[], const int rates[],
     int first = left;
     int second = middle + 1;
     int next = left;
-
+// Compare both sorted halves and copy the lower-priced slot into the temporary array.
     while (first <= middle && second <= right)
     {
         if (rates[slots[first]] <= rates[slots[second]])
@@ -67,7 +68,7 @@ void mergeSortSlots(int slots[], int temp[], const int rates[],
         second++;
         next++;
     }
-
+// Copy remaining slots, then put the merged price order back into the slots array.
     for (int i = left; i <= right; i++)
     {
         slots[i] = temp[i];
@@ -290,7 +291,8 @@ int main(void)
             }
         }
 
-        int temp[5];mergeSortSlots(freeSlots, temp, hourlyRate, 0, available - 1);  
+        int temp[5];
+        mergeSortSlots(freeSlots, temp, hourlyRate, 0, available - 1);  
 
         DrawLabel(uiFont,TextFormat("Available: %d / 5", available),50, 340, 25, DARKBLUE);
 
