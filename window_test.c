@@ -122,6 +122,7 @@ void calculateDistances(int distance[NODES])
         }
 
         visited[closest] = 1;
+// Select and mark the unvisited node with the smallest known distance.
 
         for (int next = 0; next < NODES; next++)
         {
@@ -133,7 +134,7 @@ void calculateDistances(int distance[NODES])
                 {
                     distance[next] = newDistance;
                 }
-            }
+            }// Update a neighbour's distance if the route through the selected node is shorter.
         }
     }
 }
@@ -148,7 +149,8 @@ int main(void)
         CloseWindow();
         return 1;
     }
-    
+    // Create the raylib window, set the frame rate and load the interface font.
+
     int occupied[5] = {0}; // Array to track occupied parking spaces
     char parkedPlates[5][16] = {0};
     int slotsChecked = 0; 
@@ -180,7 +182,7 @@ int main(void)
         }
 
         fclose(savedParking);
-    }
+    }// Restore valid saved slot positions and plates from parking.txt at startup.
 
     while (!WindowShouldClose())
     {
@@ -195,16 +197,16 @@ int main(void)
                 vehicleNumber[vehicleLength] = (char)key;
                 vehicleLength++;
                 vehicleNumber[vehicleLength] = '\0';
-            }
+            }// Accept up to 10 letters or digits and convert entered letters to uppercase.
         }
 
         if (IsKeyPressed(KEY_BACKSPACE) && vehicleLength > 0)
         {
         vehicleLength--;
         vehicleNumber[vehicleLength] = '\0';
-        }
+        }// Remove the last character from the entered plate when Backspace is pressed.
 
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) // Check for mouse click to toggle parking space occupancy
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) // Check whether the user clicked an occupied slot to release it.
         {
             Vector2 mouse = GetMousePosition();
             for (int i = 0; i < 5; i++)
@@ -214,15 +216,16 @@ int main(void)
                 {
                     occupied[i] = 0;
                     parkedPlates[i][0] = '\0';
-                }
-            }
+                }// Clicking an occupied slot marks it free and clears its stored plate.
+            }// A zero means there is no direct lane between those nodes.
         }
         int clicked = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
         int chooseCheapest = clicked && CheckCollisionPointRec(GetMousePosition(), cheapestButton);
         int chooseNearest = clicked &&CheckCollisionPointRec(GetMousePosition(), nearestButton);
 
         const int *priority = chooseNearest ? &distance[2] : hourlyRate;
-        
+        // Detect the parking choice and use distances or hourly rates for comparisons.
+
         if (vehicleLength > 0 && clicked && (chooseCheapest || chooseNearest || CheckCollisionPointRec(GetMousePosition(), parkButton)))
         {
             slotsChecked = 0;
@@ -252,17 +255,18 @@ int main(void)
         vehicleNumber[0] = '\0';
         vehicleLength = 0;
     }
-}
+}// Reject duplicate plates, select a suitable free slot and store the vehicle plate.
+
         if (vehicleLength > 0 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), findButton))
         {
             foundSlot = findVehicle(parkedPlates, vehicleNumber);
-        }
+        }// Search for the entered plate when the Find Car button is clicked.
 
         BeginDrawing();
         ClearBackground(RAYWHITE);
         DrawLabel(uiFont,"Smart Parking Management System",40, 40, 32, DARKBLUE); 
         DrawLabel(uiFont,"Enter a vehicle number to book a slot. Click an occupied slot to release it.",40, 85, 18, DARKGRAY);
-
+        // Draw the project title and instructions at the top of the window.
 
         for (int i = 0; i < 5; i++) // Draw parking spaces
         {
@@ -279,7 +283,7 @@ int main(void)
             DrawLabel(uiFont, parkedPlates[i], x + 5, 225, 15, BLACK);
             DrawLabel(uiFont, TextFormat("Rs %d/hr", hourlyRate[i]),x + 8, 145, 16, BLACK);     
         }
-
+// Draw each slot with its occupancy colour, number, plate and hourly rate.
        
         int available = 0;
         int freeSlots[5];
@@ -304,6 +308,7 @@ int main(void)
         }
 
         DrawLabel(uiFont,TextFormat("Slots checked: %d", slotsChecked),50, 420, 20, DARKGRAY);
+        // Collect free slot positions and sort them by hourly price using merge sort.
 
         if (duplicatePlate)
         {
@@ -316,7 +321,7 @@ int main(void)
         else if (slotsChecked > 0)
         {
             DrawLabel(uiFont, "No free slot found",50, 460, 20, RED);
-        }
+        }// Display availability, slots checked and the latest parking-request result.
 
         DrawRectangleRounded(parkButton, 0.20f, 8, DARKBLUE);
         DrawLabel(uiFont, "Park Car", 825, 310, 22, WHITE);
@@ -334,11 +339,11 @@ int main(void)
         else if (foundSlot == -1)
         {
             DrawLabel(uiFont, "Last lookup: Vehicle not found",50, 505, 20, RED);
-        }
+        }// Display the most recent vehicle lookup result.
             DrawRectangleRounded(cheapestButton, 0.20f, 8, DARKBLUE);
             DrawLabel(uiFont, "Park Cheapest", 800, 450, 19, WHITE);
             DrawRectangleRounded(nearestButton, 0.20f, 8, DARKBLUE);
-            DrawLabel(uiFont, "Park Nearest", 815, 520, 20, WHITE);
+            DrawLabel(uiFont, "Park Nearest", 815, 520, 20, WHITE);// Draw the Park Cheapest and Park Nearest buttons.
             DrawLabel(uiFont, "Compare Prices - Free Slots", 50, 555, 22, DARKBLUE);
 
         if (available == 0)
@@ -351,9 +356,10 @@ int main(void)
             int slot = freeSlots[i];
 
             DrawLabel(uiFont,TextFormat("P%d: Rs %d/hr", slot + 1, hourlyRate[slot]),50 + i * 145, 590, 20, BLACK);
-        }   
+        }   // Display the free slots in ascending price order, or a message when none are free.
             EndDrawing();
-    }
+    }// Finish drawing the current frame before the main loop repeats.
+
     FILE *parkingOutput = fopen("parking.txt", "w");
 
     if (parkingOutput != NULL)
@@ -374,8 +380,8 @@ int main(void)
     else
     {
         puts("Could not open parking.txt for saving.");
-    }
+    }// Save occupied slot positions and plates to parking.txt when the window closes.
     UnloadFont(uiFont);
-    CloseWindow();
+    CloseWindow();// Release the loaded font and raylib window resources before the program ends.
     return 0;
 }
