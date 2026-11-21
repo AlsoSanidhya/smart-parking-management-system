@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include <string.h>
 
-// Searches stored plates one by one and returns the slot index, or -1 if not found.
+// Searches stored plates one by one and returns the slot index, or -1 if not found.(LINEAR search)
 int findVehicle(char parkedPlates[5][16], const char *plate)
 {
     for (int i = 0; i < 5; i++)
@@ -18,7 +18,7 @@ int findVehicle(char parkedPlates[5][16], const char *plate)
     return -1;
 }
 
-// Draws a text label using the selected font, position, size and colour.
+// Draws a text label using the selected font, position, size and colour.(displays text in raylib window)
 void DrawLabel(Font font, const char *text,int x, int y, float size, Color color)
 {
     DrawTextEx(font, text,(Vector2){x, y},size, 1.0f, color);
@@ -78,7 +78,7 @@ void mergeSortSlots(int slots[], int temp[], const int rates[],int left, int rig
 #define NODES 7
 #define INF 1000000
 
-void calculateDistances(int distance[NODES])
+void calculateDistances(int distance[NODES])//dijkstra's algorithm to calculate the shortest distance from the entrance to each parking slot
 {
     // Node order: Entrance, Junction, P1, P2, P3, P4, P5.
     // A zero means there is no direct lane between those nodes.
@@ -124,7 +124,8 @@ void calculateDistances(int distance[NODES])
         visited[closest] = 1;
 // Select and mark the unvisited node with the smallest known distance.
 
-        for (int next = 0; next < NODES; next++)
+        for (int next = 0; next < NODES; next++)//process called relaxation in Dijkstra's algorithm,    
+        //where the algorithm checks if a shorter path to a neighboring node can be found through the current node.
         {
             if (!visited[next] && lanes[closest][next] > 0)
             {
@@ -165,7 +166,8 @@ int main(void)
     int foundSlot = -2;
     int hourlyRate[5] = {40, 25, 30, 20, 35};
     int distance[NODES];calculateDistances(distance);
-    FILE *savedParking = fopen("parking.txt", "r");
+
+    FILE *savedParking = fopen("parking.txt", "r");//file handling to read the saved parking data from "parking.txt" at startup.
 
     if (savedParking != NULL)
     {
